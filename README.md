@@ -25,7 +25,15 @@ Please refer to our original publication below for how to best choose your param
 
 ## Expected output
 A folder named `Analysis` will be exported in the folder selected in the `Data path` panel. This folder will contain 9 files: 
-- `Calibration_PDF.png` file: 
+- `Calibration_PDF.png` file: a picture plot of the fitted calibration Probability Density Function (PDF). The curve should ideally show a single peak corresponding to the monomeric distribution. If more than a single peak is shown, or if the fitted curve does not fit the distribution appropriately, adjust the `Minimum peak height` field as described above.
+- `Calibration_PDF.txt` file: text file containing the number data of the `Calibration_PDF.png` picture plot for reproduction.
+- `Calibration_raw.txt` file: text file containing the intensities and positions of the particles selected to construct the calibration PDF.
+- `Unknown_PDF.png` file: a pixture plot of the fitted Probability Density Function (PDF) of the unknown oligomeric species.
+- `Unknown_PDF.txt` file: text file containing the number data of the `Unknown_PDF.png` picture plot for reproduction.
+- `Unknown_raw.txt` file: text file containing the intensities and positions of the particles used in constructing the PDF of the unknown oligomeric species.
+- `Unknown_species proportion(before labelling correction).png` file: a pixture plot of the bar chart of the stoichiometry of the processed complexes before correction of labeling efficiency.
+- `Unknown_species proportion(after labelling correction).png` file: a pixture plot of the bar chart of the stoichiometry of the processed complexes after correction of labeling efficiency.
+- `Unknown_species proportion(summary).txt` file: text file containing the number data of the `Unknown_species proportion(before labelling correction).png` and `Unknown_species proportion(after labelling correction).png` picture plots.
 ## Citing the software
 If you use this software in any publication, please cite it as follows:  
 **Danial, JSH, Quintana, Y, Ros, U, Shalaby, R, Margheritis, EG, Chumpen, S, Ungermann, C, Garcia-Saez, AJ, Cosentino, K. Systematic assessment of the accuracy of subunit counting in biomolecular complexes using automated single molecule brightness analysis.**
