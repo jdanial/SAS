@@ -7,7 +7,13 @@ To operate SAS, double-click the file named `SAS_vx.mlapp`. The software will lo
   
 In the `Data path` panel, press the `Select path` button and a dialog will appear. Browse to the folder containing your data. See below for how to format your data for processing using SAS.  
   
-In the `Detection parameters` panel, flip the `Detect` switch to the `Y` position.  
+In the `Detection parameters` panel, flip the `Detect` switch to the `Y` position. 
+  
+In the `Processing parameters` panel, flip the `Process` switch to the `Y` position.  
+  
+In the `Annotation parameters` panel, flip the `Annotate` switch to the `Y` position.  
+  
+In the `Analysis parameters` panel, flip the `Analyze` switch to the `Y` position.
 ## Data format
 ## Citing the software
 If you use this software in any publication, please cite it as follows:  
