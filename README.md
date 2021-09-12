@@ -11,14 +11,17 @@ In the `Detection parameters` panel, flip the `Detect` switch to the `Y` positio
   
 In the `Processing parameters` panel, flip the `Process` switch to the `Y` position and insert the radius of the Region Of Interest (ROI) containing each particle (in pixels) in the `ROI radius` field. 
   
-In the `Annotation parameters` panel, flip the `Annotate` switch to the `Y` position and insert the minimum height of the normalized gradient traces (as percentage) in the `Minimum peak height` field. 
+In the `Annotation parameters` panel, flip the `Annotate` switch to the `Y` position and insert the minimum height of the normalized gradient traces (as percentage) in the `Minimum peak height` field.
   
-In the `Analysis parameters` panel, flip the `Analyze` switch to the `Y` position, insert the efficiency of fluorophore labeling (as percentage) in the `Labeling efficiency` field and the maximum number of gaussians used for fitting the unknown species in the `Maximum Gaussian mixtures` field.
+In the `Analysis parameters` panel, flip the `Analyze` switch to the `Y` position, insert the efficiency of fluorophore labeling (as percentage) in the `Labeling efficiency` field and the maximum number of gaussians used for fitting the unknown species in the `Maximum Gaussian mixtures` field.  
+  
+Press `Run` button and the text area beneath will show up-to-date information on the status of processing the data. Once the data is processed, the output will be found in the folder named `Analysis` in the folder selected in the `Data path` panel. To repeat, some of the steps above without having to repeat the entire pipeline, flip the switches of the steps not to be repeart to the `N` position.
 
 ## Data format
 The folder selected in the `Data path` panel should contain two subfolders: a folder named `Calibration` containing all calibration movies (ideally containing monomeric particles) and a folder named `Unknown` containing movies of the unknown oligomeric species. All movies should be in an 8-bit multi-tiff format.
 
 ## Choice of parameters
+Please refer to our original publication below for how to best choose your parameters. The `Minimum peak height` parameters has to be adjusted once by processing the data and checking the obtained calibration data as described below.
 
 ## Expected output
 
