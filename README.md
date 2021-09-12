@@ -16,7 +16,7 @@ In the `Annotation parameters` panel, flip the `Annotate` switch to the `Y` posi
 In the `Analysis parameters` panel, flip the `Analyze` switch to the `Y` position, insert the efficiency of fluorophore labeling (as percentage) in the `Labeling efficiency` field and the maximum number of gaussians used for fitting the unknown species in the `Maximum Gaussian mixtures` field.
 
 ## Data format
-The folder containing your data should contain two subfolders
+The folder selected in the `Data path` panel should contain two subfolders: a folder named `Calibration` containing all calibration movies (ideally containing monomeric particles) and a folder named `Unknown` containing movies of the unknown oligomeric species. All movies should be in an 8-bit multi-tiff format.
 
 ## Choice of parameters
 
