@@ -4,7 +4,9 @@ SAS is the Stoichiometry Analysis Software. This software was developed for high
 To install SAS, you will need to install MATLAB 2020a or higher. This version of MATLAB can be downloaded from [here](https://www.mathworks.com/products/matlab.html). Once installed, the following four packages must be installed: signal processing and communications; machine learning and deep learning; maths, statistics and optimization; image processing and computer vision. Clone this directory in a folder of your choice on your computer.
 ## Operation
 To operate SAS, double-click the file named `SAS_vx.mlapp`. The software will load and a GUI will appear.   
+  
 In the `Data path` panel, press the `Select path` button and a dialog will appear. Browse to the folder containing your data. See below for how to format your data for processing using SAS.  
+  
 In the `Detection parameters` panel, flip the `Detect` switch to the `Y` position.  
 ## Data format
 ## Citing the software
