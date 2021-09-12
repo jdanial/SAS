@@ -16,6 +16,12 @@ In the `Annotation parameters` panel, flip the `Annotate` switch to the `Y` posi
 In the `Analysis parameters` panel, flip the `Analyze` switch to the `Y` position, insert the efficiency of fluorophore labeling (as percentage) in the `Labeling efficiency` field and the maximum number of gaussians used for fitting the unknown species in the `Maximum Gaussian mixtures` field.
 
 ## Data format
+The folder containing your data should contain two subfolders
+
+## Choice of parameters
+
+## Expected output
+
 ## Citing the software
 If you use this software in any publication, please cite it as follows:  
 **Danial, JSH, Quintana, Y, Ros, U, Shalaby, R, Margheritis, EG, Chumpen, S, Ungermann, C, Garcia-Saez, AJ, Cosentino, K. Systematic assessment of the accuracy of subunit counting in biomolecular complexes using automated single molecule brightness analysis.**
