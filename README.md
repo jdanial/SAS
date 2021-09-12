@@ -7,7 +7,7 @@ To operate SAS, double-click the file named `SAS_vx.mlapp`. The software will lo
   
 In the `Data path` panel, press the `Select path` button and a dialog will appear. Browse to the folder containing your data. See below for how to format your data for processing using SAS.  
   
-In the `Detection parameters` panel, flip the `Detect` switch to the `Y` position. 
+In the `Detection parameters` panel, flip the `Detect` switch to the `Y` position, insert the pixel size of the detection camera (in nanometers) in the `Camera pixel size` field, insert the quantum efficiency of the detection camera (as percentage) at the emission wavelength of the used fluorophore in the `Camera quantum efficiency` field , insert the offset of the detection camera (in signal units) in the `Camera offset` field, insert the electron multiplication gain of the detection camera (in in electrons / photons) in the `Camera EM gain` field, and a maximum value of the standard deviation in the point spreaf function of the detected particles (in nanometers) in the `Maximum sigma` field. All camera parameters can be obtained from the supplier. 
   
 In the `Processing parameters` panel, flip the `Process` switch to the `Y` position.  
   
