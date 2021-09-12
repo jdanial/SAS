@@ -24,7 +24,8 @@ The folder selected in the `Data path` panel should contain two subfolders: a fo
 Please refer to our original publication below for how to best choose your parameters. The `Minimum peak height` parameters has to be adjusted once by processing the data and checking the obtained calibration data as described below.
 
 ## Expected output
-
+A folder named `Analysis` will be exported in the folder selected in the `Data path` panel. This folder will contain 9 files: 
+- `Calibration_PDF.png` file: 
 ## Citing the software
 If you use this software in any publication, please cite it as follows:  
 **Danial, JSH, Quintana, Y, Ros, U, Shalaby, R, Margheritis, EG, Chumpen, S, Ungermann, C, Garcia-Saez, AJ, Cosentino, K. Systematic assessment of the accuracy of subunit counting in biomolecular complexes using automated single molecule brightness analysis.**
