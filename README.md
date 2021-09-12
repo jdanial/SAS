@@ -6,3 +6,6 @@ To install SAS, you will need to install MATLAB 2020a or higher. This version of
 To operate SAS, double-click the file named `SAS_vx`. The software will load and a GUI will appear. 
 In the `Data path` panel press the `Select path` button and a dialog will appear. Browse to the folder containing your data. See below for how to format for processing using SAS.
 ## Data format
+## Citing the software
+If you use this software in any publication, please cite it as follows:
+Danial, JSH, Quintana, Y, Ros, U, Shalaby, R, Margheritis, EG, Chumpen, S, Ungermann, C, Garcia-Saez, AJ, Cosentino, K. Systematic assessment of the accuracy of subunit counting in biomolecular complexes using automated single molecule brightness analysis.
