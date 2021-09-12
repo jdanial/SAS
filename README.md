@@ -5,7 +5,7 @@ To install SAS, you will need to install MATLAB 2020a or higher. This version of
   
 Clone this directory in a folder of your choice on your computer.
 ## Operation
-To operate SAS, double-click the file named `SAS_vx.mlapp`. The software will load and a GUI will appear.   
+To operate SAS, double-click the `SAS_vx.mlapp` file. The software will load and a GUI will appear.   
   
 In the `Data path` panel, press the `Select path` button and a dialog will appear. Browse to the folder containing your data. See below for how to format your data for processing using SAS.  
   
