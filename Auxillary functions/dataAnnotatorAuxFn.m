@@ -9,10 +9,13 @@ function returnFlag = dataAnnotatorAuxFn(app)
 % - app: SAS UI class
 
 %% initializing factors
-avgFactor = 10;
+avgFactor = 1;
 
 %% extracting number of files
 numFiles = length(app.data.file);
+
+%% extracting minimum peak height
+minPeakHeight = app.param.annotation.minPeakHeight / 100;
 
 %% looping through files
 for fileId = 1 : numFiles
@@ -29,8 +32,8 @@ for fileId = 1 : numFiles
         %% validating network
         for particleId = 1 : numParticles
             if strcmp(app.data.file(fileId).particle(particleId).state,'accepted')
-                intensity = abs(gradient(movmean([app.data.file(fileId).particle(particleId).frame(:).intensity],avgFactor)'));
-                gradPeaks = findpeaks((intensity - min(intensity)) ./ (max(intensity) - min(intensity)),'MinPeakHeight',0.8);
+                intensity = abs(diff(movmean([app.data.file(fileId).particle(particleId).frame(:).intensity],avgFactor)'));
+                gradPeaks = findpeaks((intensity - min(intensity)) ./ (max(intensity) - min(intensity)),'MinPeakHeight',minPeakHeight);
                 if length(gradPeaks) == 1
                     app.data.file(fileId).particle(particleId).monomeric = true;
                 else

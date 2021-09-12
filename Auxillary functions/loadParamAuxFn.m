@@ -45,4 +45,5 @@ app.AnalyzeSwitch.Value = app.param.analysis.analyze;
 app.LabelingeffeciencyEditField.Value = app.param.analysis.labelingEfficiency;
 app.MaximumGMMEditField.Value = app.param.analysis.maxGMM;
 app.RefineCheckBox.Value = app.param.analysis.refine;
+app.MinimumPeakHeightEditField.Value = app.param.annotation.minPeakHeight;
 end
