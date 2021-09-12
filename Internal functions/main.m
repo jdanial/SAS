@@ -22,6 +22,7 @@ app.param.processing.process = app.ProcessSwitch.Value == 'Y';
 
 % annotation parameters - EDITABLE (only for calibration traces)
 app.param.annotation.annotate = app.AnnotateSwitch.Value == 'Y';
+app.param.annotation.minPeakHeight = app.MinimumPeakHeightEditField.Value;
 
 % analysis parameters - EDITABLE
 app.param.analysis.analyse = app.AnalyzeSwitch.Value == 'Y';
