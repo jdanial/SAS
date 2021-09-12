@@ -38,4 +38,5 @@ A folder named `Analysis` will be exported in the folder selected in the `Data p
 - `Unknown_species proportion(summary).txt` file: text file containing the number data of the `Unknown_species proportion(before labelling correction).png` and `Unknown_species proportion(after labelling correction).png` picture plots.
 ## Citing the software
 If you use this software in any publication, please cite it as follows:  
-**Danial, JSH, Quintana, Y, Ros, U, Shalaby, R, Margheritis, EG, Chumpen, S, Ungermann, C, Garcia-Saez, AJ, Cosentino, K. Systematic assessment of the accuracy of subunit counting in biomolecular complexes using automated single molecule brightness analysis.**
+  
+Danial, JSH, Quintana, Y, Ros, U, Shalaby, R, Margheritis, EG, Chumpen, S, Ungermann, C, Garcia-Saez, AJ, Cosentino, K. Systematic assessment of the accuracy of subunit counting in biomolecular complexes using automated single molecule brightness analysis.
