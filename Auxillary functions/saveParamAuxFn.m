@@ -1,22 +1,28 @@
 function saveParamAuxFn(app)
 % saveParamAuxFn() -
-% saves BAS parameters.
+% saves SAS parameters.
 %
 % Syntax -
 % exportFn(app).
 %
 % Parameters -
-% - app: BAS UI class
+% - app: SAS UI class
 
 % registering parameters
 app.param.detection.detect = app.DetectSwitch.Value;
+app.param.detection.pixelSize = app.CameraPixelSizeEditField.Value;
+app.param.detection.cameraOffset = app.CameraOffsetEditField.Value;
+app.param.detection.cameraQE = app.CameraQEEditField.Value;
+app.param.detection.cameraEMGain = app.CameraEMGainEditField.Value;
 app.param.detection.maxSigma = app.MaximumSigmaEditField.Value;
-app.param.detection.localize = app.LocalizeCheckBox.Value;
 app.param.detection.roiRadius = app.ROIRadiusEditField.Value;
+app.param.procesing.process = app.ProcessSwitch.Value;
+app.param.annotation.annotate = app.AnnotateSwitch.Value;
 app.param.analysis.analyze = app.AnalyzeSwitch.Value;
-app.param.analysis.numSubUnitsPerCalibComplex = app.NumSubUnitsPerCalibComplexEditField.Value;
-app.param.analysis.timeSlice = app.TimeSliceEditField.Value;
-app.param.analysis.binSize = app.BinSizeEditField.Value;
+app.param.analysis.labelingEfficiency = app.LabelingeffeciencyEditField.Value;
+app.param.analysis.maxGMM = app.MaximumGMMEditField.Value;
+app.param.analysis.refine = app.RefineCheckBox.Value;
+app.param.annotation.minPeakHeight = app.MinimumPeakHeightEditField.Value;
 
 % saving parameters
 param = app.param;

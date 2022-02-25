@@ -1,10 +1,8 @@
 function main(app)
 % main entry point
-% calls all MAS functions to detect and analyze single punctas of 
-% nanoscopic biological assemblies in diffraction-limited microscopy (i.e.
-% confocal and widefield).
+% calls all SAS functions to detect, classify and analyze photobleaching traces
 %
-% Copyright 2022 John S H Danial
+% Copyright 2020 John S H Danial
 % Department of Chemistry, Univerity of Cambridge
 
 % setting folder paths - EDITABLE
@@ -12,15 +10,25 @@ app.param.paths.calibrationAndUnknownData = app.CalibrationunknowndataEditField.
 
 % detection parameters - EDITABLE
 app.param.detection.detect = app.DetectSwitch.Value == 'Y';
-app.param.detection.localize = app.LocalizeCheckBox.Value;
+app.param.detection.cameraPixelSize = app.CameraPixelSizeEditField.Value;
+app.param.detection.cameraOffset = app.CameraOffsetEditField.Value;
+app.param.detection.cameraQE = app.CameraQEEditField.Value;
+app.param.detection.cameraEMGain = app.CameraEMGainEditField.Value;
 app.param.detection.maxSigma = app.MaximumSigmaEditField.Value;
-app.param.detection.roiRadius = app.ROIRadiusEditField.Value + 1;
+app.param.detection.roiRadius = app.ROIRadiusEditField.Value;
+
+% processing parameters - EDITABLE
+app.param.processing.process = app.ProcessSwitch.Value == 'Y';
+
+% annotation parameters - EDITABLE (only for calibration traces)
+app.param.annotation.annotate = app.AnnotateSwitch.Value == 'Y';
+app.param.annotation.minPeakHeight = app.MinimumPeakHeightEditField.Value;
 
 % analysis parameters - EDITABLE
 app.param.analysis.analyse = app.AnalyzeSwitch.Value == 'Y';
-app.param.analysis.numSubUnitsPerCalibComplex = app.NumSubUnitsPerCalibComplexEditField.Value;
-app.param.analysis.timeSlice = app.TimeSliceEditField.Value;
-app.param.analysis.binSize = app.BinSizeEditField.Value;
+app.param.analysis.labelingEfficiency = app.LabelingeffeciencyEditField.Value;
+app.param.analysis.maxGMM = app.MaximumGMMEditField.Value;
+app.param.analysis.refine = app.RefineCheckBox.Value;
 
 % setting returnFlag
 returnFlag = false;
@@ -29,6 +37,15 @@ returnFlag = false;
 if app.param.detection.detect && ~returnFlag
     returnFlag = detectFn(app);
 end
+if app.param.processing.process && ~returnFlag
+    extractFn(app);
+    returnFlag = processFn(app);
+end
+if app.param.annotation.annotate && ~returnFlag
+    extractFn(app);
+    returnFlag = annotateFn(app);
+end
+
 if app.param.analysis.analyse && ~returnFlag
     extractFn(app);
     analyzeFn(app);
