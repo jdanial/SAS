@@ -1,12 +1,12 @@
 function loadParamAuxFn(app)
 % loadParamAuxFn() -
-% loads SAS parameters.
+% loads BAS parameters.
 %
 % Syntax -
 % exportFn(app).
 %
 % Parameters -
-% - app: SAS UI class
+% - app: BAS UI class
 
 % saving parameters
 [importFile,importPath] = uigetfile('*.sp');
@@ -33,17 +33,11 @@ app.param = paramTemp.param;
 
 % listing parameters
 app.DetectSwitch.Value = app.param.detection.detect;
-app.CameraPixelSizeEditField.Value = app.param.detection.pixelSize;
-app.CameraOffsetEditField.Value = app.param.detection.cameraOffset;
-app.CameraQEEditField.Value = app.param.detection.cameraQE;
-app.CameraEMGainEditField.Value = app.param.detection.cameraEMGain;
 app.MaximumSigmaEditField.Value = app.param.detection.maxSigma;
+app.LocalizeCheckBox.Value = app.param.detection.localize;
 app.ROIRadiusEditField.Value = app.param.detection.roiRadius;
-app.ProcessSwitch.Value = app.param.procesing.process;
-app.AnnotateSwitch.Value = app.param.annotation.annotate;
 app.AnalyzeSwitch.Value = app.param.analysis.analyze;
-app.LabelingeffeciencyEditField.Value = app.param.analysis.labelingEfficiency;
-app.MaximumGMMEditField.Value = app.param.analysis.maxGMM;
-app.RefineCheckBox.Value = app.param.analysis.refine;
-app.MinimumPeakHeightEditField.Value = app.param.annotation.minPeakHeight;
+app.NumSubUnitsPerCalibComplexEditField.Value = app.param.analysis.numSubUnitsPerCalibComplex;
+app.TimeSliceEditField.Value = app.param.analysis.timeSlice;
+app.BinSizeEditField.Value = app.param.analysis.binSize;
 end

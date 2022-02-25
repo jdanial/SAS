@@ -1,19 +1,19 @@
 function returnFlag = exportFn(app)
 % exportFn() -
-% exports data generated for SAS.
+% exports data generated for MAS.
 %
 % Syntax -
 % exportFn(app,exportMode).
 %
 % Parameters -
-% - app: SAS UI class
-% - exportMode: SAS module name.
+% - app: MAS UI class
+% - exportMode: MAS module name.
 
 %% initializing returnFlag
 returnFlag = false;
 
 %% displaying SAS progress
-app.msgBox.Value = sprintf('%s','Progress: export started.');
+app.msgBox.Value = sprintf('%s','Export started.');
 
 %% extracting number of files
 numFiles = length(app.data.file);
@@ -28,7 +28,7 @@ try
         mkdir(fullfile(app.param.paths.calibrationAndUnknownData,app.data.file(fileId).type,'native'));
         
         %% setting up progress
-        app.msgBox.Value = sprintf('%s',['Progress: exporting data in file ' num2str(fileId) ' out of ' num2str(numFiles) '.']);
+        app.msgBox.Value = sprintf('%s',['Exporting data in ' app.data.file(fileId).type ' file ' num2str(fileId) ' out of ' num2str(numFiles) '.']);
         drawnow;
         
         %% saving .sd file

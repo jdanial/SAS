@@ -1,12 +1,12 @@
 function returnFlag = extractFn(app)
 % extractFn() - 
-% extracts data saved by SAS.
+% extracts data saved by MAS.
 %
 % Syntax - 
 % extractFn(app).
 %
 % Parameters -
-% - app: SAS UI class
+% - app: MAS UI class
 
 %% initializing returnFlag
 returnFlag = false;
@@ -39,7 +39,7 @@ for fileId = 1 : numFiles
     filePath = fullfile(fileFolder,fileName);
     
     %% setting up SAS progress
-    app.msgBox.Value = sprintf('%s',['Progress: extracting data from file ' num2str(fileId) ' out of ' num2str(numFiles) '.']);
+    app.msgBox.Value = sprintf('%s',['Extracting data from file ' num2str(fileId) ' out of ' num2str(numFiles) '.']);
     drawnow;
     
     %% replacing extension with .mat
@@ -65,6 +65,6 @@ for fileId = 1 : numFiles
 end
 
 %% displaying SAS progress
-app.msgBox.Value = sprintf('%s','Progress: extraction complete.');
+app.msgBox.Value = sprintf('%s','Extraction complete.');
 drawnow;
 end

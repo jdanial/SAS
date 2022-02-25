@@ -102,26 +102,23 @@ for roundId = 1 : 2
         StackProcessor(app,fileId);
 
         %% setting up progress
-        app.msgBox.Value = sprintf('%s',['Detecting particles in ' app.data.file(fileId).type ' file ' num2str(fileId)]);
+        app.msgBox.Value = sprintf('%s',['Detecting particles in ' app.data.file(fileId).type ' file ' num2str(fileId) '. Classifying regional maximas.']);
         drawnow;
 
         %% calling ParticleDetector
         ParticleDetector(app,fileId);
 
-        if app.param.detection.localize
+        %% setting up progress
+        app.msgBox.Value = sprintf('%s',['Localizing particles in ' app.data.file(fileId).type ' file ' num2str(fileId) '.']);
+        drawnow;
 
-            %% setting up progress
-            app.msgBox.Value = sprintf('%s',['Localizing particles in ' app.data.file(fileId).type ' file ' num2str(fileId) '.']);
-            drawnow;
+        %ParticleLocalizer(app,fileId);
 
-            ParticleLocalizer(app,fileId);
+        %% setting up progress
+        app.msgBox.Value = sprintf('%s',['Rejecting particles in ' app.data.file(fileId).type ' file ' num2str(fileId) '.']);
+        drawnow;
 
-            %% setting up progress
-            app.msgBox.Value = sprintf('%s',['Rejecting particles in ' app.data.file(fileId).type ' file ' num2str(fileId) '.']);
-            drawnow;
-
-            ParticleRejector(app,fileId);
-        end
+        %ParticleRejector(app,fileId);
     end
 
     %% exporting generic .m files

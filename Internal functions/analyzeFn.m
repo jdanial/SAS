@@ -1,32 +1,27 @@
 function returnFlag = analyzeFn(app)
 % analyzeFn() -
-% analyzes data processed by SAS.
+% analyzes data processed by BAS.
 %
 % Syntax -
 % analyzeFn(app).
 %
 % Parameters -
-% - app: SAS UI class
+% - app: MAS UI class
 
 %% initializing returnFlag
 returnFlag = false;
 
 %% displaying SAS progress
-app.msgBox.Value = sprintf('%s','Progress: data analysis started.');
+app.msgBox.Value = sprintf('%s','Data analysis started.');
 drawnow;
 
 %% calling ParticleDetector
-app.msgBox.Value = sprintf('%s','Progress: generating and fitting kernel estimator.');
+app.msgBox.Value = sprintf('%s','Calculating molecularity.');
 drawnow;
-KernelGeneratorAndFitter(app);
-
-%% calling LabelingCorrector
-app.msgBox.Value = sprintf('%s','Progress: correcting for labelling.');
-drawnow;
-LabellingCorrector(app);
+MolecularityCalculator(app);
 
 %% exporting files relevant to this function
-app.msgBox.Value = sprintf('%s','Progress: exporting data.');
+app.msgBox.Value = sprintf('%s','Exporting analysis data.');
 drawnow;
 SpecificExport(app);
 
@@ -35,164 +30,121 @@ drawnow;
 end
 
 %%====================KernelGenerator=====================%%
-function KernelGeneratorAndFitter(app)
-global x0 s refineId refinedIndex numGaussCalib meanCalib numGaussCurrent;
+function MolecularityCalculator(app)
+
+% extracting number of subunits per complex used for calibration
+numSubUnitsPerCalibComplex = app.param.analysis.numSubUnitsPerCalibComplex;
+binSize = app.param.analysis.binSize;
 
 % extracting number of files
 numFiles = length(app.data.file);
 
-% extracting maximum number of Gaussian mixture
-maxGMM = app.param.analysis.maxGMM;
-
-% initializing intensity vector
+% initializing arrays
 intCalibration = [];
-intUnknown = [];
+intUnknown = struct();
 
 % looping over files
 for fileId = 1 : numFiles
-    
+
     % checking if file is a calibration file
     if strcmp(app.data.file(fileId).type,'Calibration')
-        
-        % extracting number of particles
-        numParticles = length(app.data.file(fileId).particle);
-        
-        % looping over particles
-        for particleId = 1 : numParticles
-            
-            % checking if particle is accepted
-            if strcmp(app.data.file(fileId).particle(particleId).state,'accepted')
-                
-                if app.data.file(fileId).particle(particleId).monomeric
+
+        % looping through time
+        for tId = 1 : size(app.data.file(fileId).image,1)
+
+            % extracting number of particles
+            numParticles = length(app.data.file(fileId).time(tId).particle);
+
+            % looping over particles
+            for particleId = 1 : numParticles
+
+                % checking if particle is accepted
+                if strcmp(app.data.file(fileId).time(tId).particle(particleId).state,'accepted')
 
                     % calculating the intensity
                     intCalibration = [intCalibration ...
-                        app.data.file(fileId).particle(particleId).maxIntensity - ...
-                        app.data.file(fileId).particle(particleId).minIntensity];
+                        app.data.file(fileId).time(tId).particle(particleId).intensity];
                 end
             end
         end
     else
-        
-        % extracting number of particles
-        numParticles = length(app.data.file(fileId).particle);
-        
-        % looping over particles
-        for particleId = 1 : numParticles
-            
-            % checking if particle is accepted
-            if strcmp(app.data.file(fileId).particle(particleId).state,'accepted')
 
-                % calculating the intensity
-                intUnknown = [intUnknown ...
-                    app.data.file(fileId).particle(particleId).maxIntensity - ...
-                    app.data.file(fileId).particle(particleId).minIntensity];
+        % looping through time
+        for tId = 1 : length(app.data.file(fileId).time)
+            intUnknownTemp = [];
+            
+            % extracting number of particles
+            numParticles = length(app.data.file(fileId).time(tId).particle);
+
+            % looping over particles
+            for particleId = 1 : numParticles
+
+                % checking if particle is accepted
+                if strcmp(app.data.file(fileId).time(tId).particle(particleId).state,'accepted')
+
+                    % calculating the intensity
+                    intUnknownTemp = [intUnknownTemp ...
+                        app.data.file(fileId).time(tId).particle(particleId).intensity];
+                end
+            end
+            try
+                intUnknown.time(tId).intensity = [intUnknown.time(tId).intensity intUnknownTemp];
+            catch
+                intUnknown.time(tId).intensity = intUnknownTemp;
             end
         end
     end
 end
 
-% fitting calibration data
-numGaussCalib = 2;
-x_calib = min(intCalibration) : 1 : max(intCalibration);
-pd = fitdist(intCalibration','Kernel','BandWidth',5);
-y_calib = pdf(pd,x_calib);
-[~,peakLoc] = findpeaks((y_calib - min(y_calib)) ./ (max(y_calib) - min(y_calib)),'MinPeakHeight',0.4);
-param = lsqcurvefit(@GMM,...
-    [y_calib(peakLoc(1)) * ones(1,numGaussCalib) x_calib(peakLoc(1)) x_calib(peakLoc(1)) / 4 x_calib(peakLoc(1)) / 4],...
-    x_calib,...
-    y_calib,...
-    [0 0 x_calib(peakLoc(1)) 0 0],...
-    [inf inf x_calib(peakLoc(1)) inf inf]);
-app.data.curve.y_calib = y_calib;
-app.data.curve.x_calib = x_calib;
-app.data.curve.param = param;
+% calculating the mean and standard deviation of the calibration molecularity
+app.data.intCalibration = intCalibration;
+app.data.meanIntCalibration = median(app.data.intCalibration);
+app.data.stdIntCalibration = std(app.data.intCalibration);
 
-% finding mean and sigma of the monomeric species
-meanCalibration = param(numGaussCalib + 1);
-sigmaCalibration = param(numGaussCalib + 2);
-
-% constructing maximum number of Gaussians
-numGauss = floor((meanCalibration / sigmaCalibration) ^ 2);
-numGauss = min([numGauss maxGMM]);
-
-% constructing mean and std vector
-x0 = [];
-s = [];
-if app.param.analysis.refine
-    numRefines = 20;
-else
-    numRefines = 1;
-end
-for refineId = 1 : numRefines
-    for gaussId = 1 : numGauss
-        x0(refineId,gaussId) = gaussId * (meanCalibration - ceil(numRefines/2) + refineId);
-        s(refineId,gaussId) = sqrt(gaussId) * sigmaCalibration;
-    end
+% calculating molecularity
+for tId = 1 : length(intUnknown.time)
+    app.data.molecularity.time(tId).index = round((intUnknown.time(tId).intensity ./ ...
+        app.data.meanIntCalibration) .* ...
+        numSubUnitsPerCalibComplex);
 end
 
-% constructing a kernel distribution
-x_unknown = min(intUnknown) : 1 : max(intUnknown);
-pd = fitdist(intUnknown','Kernel','BandWidth',5);
-y_unknown = pdf(pd,x_unknown);
-app.data.curve.y_unknown = y_unknown;
-app.data.curve.x_unknown = x_unknown;
-
-% fitting gaussian mixture model to data
-for refineId = 1 : numRefines
-    minResidual = inf;
-    for gaussId = 1 : numGauss
-        numGaussCurrent = gaussId;
-        [species,~,residual,~,~] = lsqcurvefit(@ModelGenerator,double((1 / gaussId) .* ones(1,gaussId)),x_unknown,y_unknown,...
-            zeros(1,gaussId),inf * ones(1,gaussId));
-        if sqrt(sum(residual .^ 2)) < 0.95 * minResidual
-            minResidual = sqrt(sum(residual .^ 2));
-            chosenSpecies = species;
+% calculating molecularity count
+for tId = 1 : length(intUnknown.time)
+    for moleculeId = 1 : max(app.data.molecularity.time(tId).index)
+        app.data.molecularity.count.time(tId).molecule(moleculeId) = 0;
+        for indexId = 1 : length(app.data.molecularity.time(tId).index)
+            if app.data.molecularity.time(tId).index(indexId) == moleculeId
+                app.data.molecularity.count.time(tId).molecule(moleculeId) = ...
+                    app.data.molecularity.count.time(tId).molecule(moleculeId) + 1;
+            end
         end
     end
-    refinedResidual(refineId) = minResidual;
-    refinedSpecies.refine{refineId} = chosenSpecies;
 end
 
-% choosing species after refinement
-[~,refinedIndex] = min(refinedResidual);
-if (refinedIndex == 1 || refinedIndex == numRefines) && app.param.analysis.refine
-     refinedIndex = 5;
-end
-app.data.species.raw = refinedSpecies.refine{refinedIndex};
-app.data.curve.refinedParam.x0 = x0(refinedIndex,:);
-app.data.curve.refinedParam.s = s(refinedIndex,:);
-end
-
-%%====================KernelGenerator=====================%%
-function LabellingCorrector(app)
-
-% expressing propotions as percentages
-app.data.species.before = (100 .* app.data.species.raw) ./ sum(app.data.species.raw);
-
-% constructing matrix with binomial probabilities
-dim = numel(app.data.species.before);
-
-% constructing binomial distribution
-for n = 1 : dim
-    for x = 1 : dim
-        binomialPdf(x,n) = binopdf(x,n,app.param.analysis.labelingEfficiency / 100);
+% calculating molecularity kernel
+for tId = 1 : length(intUnknown.time)
+    try
+        x_unknown = min(app.data.molecularity.time(tId).index(:)) : 1 : max(app.data.molecularity.time(tId).index(:));
+        pd = fitdist(intUnknown.time(tId).intensity','Kernel','BandWidth',binSize);
+        y_unknown = pdf(pd,x_unknown);
+        app.data.curve.time(tId).y_unknown = y_unknown;
+        app.data.curve.time(tId).x_unknown = x_unknown;
+    catch
     end
 end
 
-equalityConstraint_A = ones(1,dim);
-equalityConstraint_B = 100;
-lowerBound = zeros(dim,1);
-upperBound = 100 .* ones(dim,1);
-
-% calculating number of species
-[species,~,~,~,~,~] = lsqlin(binomialPdf,app.data.species.before,[],[],equalityConstraint_A,equalityConstraint_B,lowerBound,upperBound);
-app.data.species.after = 100 .* species ./ sum(species);
+% calculating average molecularily 
+for tId = 1 : length(intUnknown.time)
+    try
+        app.data.molecularity.time(tId).mean = mean(app.data.molecularity.time(tId).index);
+        app.data.molecularity.time(tId).sd = std(app.data.molecularity.time(tId).index);
+    catch
+    end
+end
 end
 
-%%====================KernelGenerator=====================%%
+%%====================SpecificExport=====================%%
 function SpecificExport(app)
-global s x0 numGaussCalib refinedIndex
 
 % creating new folder
 mkdir(fullfile(app.param.paths.calibrationAndUnknownData,'analysis'));
@@ -200,187 +152,216 @@ mkdir(fullfile(app.param.paths.calibrationAndUnknownData,'analysis'));
 % calculating file handle and opening file
 fileHandle = fopen(fullfile(app.param.paths.calibrationAndUnknownData,...
     'analysis',...
-    'Unknown_species proportion(summary).txt'),'w');
+    'Calibration_intensity.txt'),'w');
 
-% writing to text file proportions before correcting for labelling efficiency      
-fprintf(fileHandle,'%s\n','Proportions before correcting for labelling efficiency');
-for unitId = 1 : length(app.data.species.before)
-     fprintf(fileHandle,'%d\t%d\n',unitId,app.data.species.before(unitId));
-end
-
-% line skipping
-fprintf(fileHandle,'\n');
-
-% writing to text file proportions after correcting for labelling efficiency      
-fprintf(fileHandle,'%s\n','Proportions after correcting for labelling efficiency');
-for unitId = 1 : length(app.data.species.after)
-     fprintf(fileHandle,'%d\t%d\n',unitId,app.data.species.after(unitId));
+% writing values
+fprintf(fileHandle,'%s\n','Intensity');
+for unitId = 1 : length(app.data.intCalibration)
+    fprintf(fileHandle,'%d\t%d\n',unitId,app.data.intCalibration(unitId));
 end
 
 % closing file
 fclose(fileHandle);
 
-% creating figure (bar graph of species before labelling correction)
+% creating figure (box plot of calibration intensities)
 figHandle = figure('visible','off');
 
-% drawing bar graph
-bar(1 : length(app.data.species.before),app.data.species.before);
-xlabel('Species');
-ylabel('Proportions (%)')
+% drawing plot
+boxplot(app.data.intCalibration);
+xlabel('Calibration set');
+ylabel('Intensity (A.U.)');
 
 % saving figure
 saveas(figHandle,fullfile(app.param.paths.calibrationAndUnknownData,...
     'analysis',...
-    'Unknown_species proportion(before labelling correction).png'));
+    'Calibration_boxplot.png'));
 
-% creating figure (bar graph of species after labelling correction)
+% creating figure (PDF of molecularity)
 figHandle = figure('visible','off');
 
-% drawing bar graph
-bar(1 : length(app.data.species.after),app.data.species.after);
-xlabel('Species');
-ylabel('Proportions (%)')
+% looping through time
+for tId = 1 : length(app.data.molecularity.count.time)
+
+    try
+
+        % drawing kernel density estimator
+        plot(app.data.curve.time(tId).x_unknown,app.data.curve.time(tId).y_unknown,...
+            'DisplayName',[num2str(app.param.analysis.timeSlice * (tId - 1)) ' min']);
+        hold on;
+    catch
+    end
+
+end
+hold off;
+legend
+xlabel('Molecularity');
+ylabel('Frequency');
 
 % saving figure
 saveas(figHandle,fullfile(app.param.paths.calibrationAndUnknownData,...
     'analysis',...
-    'Unknown_species proportion(after labelling correction).png'));
+    'Unknown_molecularity_PDF_combined.png'));
 
-% saving PDF of unknown data in text file
+% creating figure (PDF of average molecularity)
+figHandle = figure('visible','off');
+
 % calculating file handle and opening file
 fileHandle = fopen(fullfile(app.param.paths.calibrationAndUnknownData,...
     'analysis',...
-    'Unknown_PDF.txt'),'w'); 
+    'Unknown_molecularity_average.txt'),'w');
 
-% creating figure (bar graph of species after labelling correction)
-figHandle = figure('visible','off');
-
-% drawing kernel density estimator
-plot(app.data.curve.x_unknown,app.data.curve.y_unknown);
-hold on;
-
-% recording kernel density estimator in text file
-fprintf(fileHandle,'%s\n','Kernel Density Estimator');
-fprintf(fileHandle,'%s\t%s\n','Intensity (Photons)','Frequency');
-for indexId = 1 : length(app.data.curve.x_unknown)
-    fprintf(fileHandle,'%f\t%f\n',...
-        app.data.curve.x_unknown(indexId),...
-        app.data.curve.y_unknown(indexId));
-end
-fprintf(fileHandle,'\n');
-
-% drawing gaussian mixture
-for gaussId = 1 : length(app.data.species.before)
-    y = [];
-    for x = app.data.curve.x_unknown
-       y = [y (app.data.species.raw(gaussId) ./ ...
-           (s(refinedIndex,gaussId) .* sqrt(2 * pi))) .* exp(-((x - x0(refinedIndex,gaussId)) .^ 2) ./ (2 .* (s(refinedIndex,gaussId) ^ 2)))]; 
+% writing values
+fprintf(fileHandle,'%s\t%s\t%s\n','Time (min)','Mean molecularity','Std molecularity');
+for tId = 1 : length(app.data.molecularity.count.time)
+    try
+        fprintf(fileHandle,'%d\t%d\t%d\n',(tId - 1) * app.param.analysis.timeSlice,...
+            app.data.molecularity.time(tId).mean,...
+            app.data.molecularity.time(tId).sd);
+    catch
     end
-    plot(app.data.curve.x_unknown,y);
-    hold on;
-    fprintf(fileHandle,'%s\t%d\n','Gaussian Curve',gaussId);
-    fprintf(fileHandle,'%s\t%s\n','Intensity (Photons)','Frequency');
-    for indexId = 1 : length(app.data.curve.x_unknown)
-        fprintf(fileHandle,'%f\t%f\n',...
-            app.data.curve.x_unknown(indexId),...
-            y(indexId));
-    end
-    fprintf(fileHandle,'\n');
 end
-hold off;
-xlabel('Intensity (photons)');
-ylabel('Frequency')
-
-% saving figure
-saveas(figHandle,fullfile(app.param.paths.calibrationAndUnknownData,...
-    'analysis',...
-    'Unknown_PDF.png'));
 
 % closing file
 fclose(fileHandle);
 
-% saving PDF of calibration data in text file
-% calculating file handle and opening file
-fileHandle = fopen(fullfile(app.param.paths.calibrationAndUnknownData,...
-    'analysis',...
-    'Calibration_PDF.txt'),'w'); 
-
-% creating figure (bar graph of species after labelling correction)
-figHandle = figure('visible','off');
-
-% drawing kernel density estimator
-plot(app.data.curve.x_calib,app.data.curve.y_calib);
+% looping through time
+xConf = [];
+yConf = [];
+x = [];
+y = [];
+for tId = 1 : length(app.data.molecularity.count.time)
+    if ~isnan(app.data.molecularity.time(tId).mean)
+        y = [y app.data.molecularity.time(tId).mean];
+        yConf = [yConf app.data.molecularity.time(tId).mean + app.data.molecularity.time(tId).sd];
+        x = [x (tId - 1) * app.param.analysis.timeSlice];
+        xConf = [xConf (tId - 1) * app.param.analysis.timeSlice];
+    end
+end
+for tId = length(app.data.molecularity.count.time) : - 1 : 1 
+    if ~isnan(app.data.molecularity.time(tId).mean)
+        yConf = [yConf app.data.molecularity.time(tId).mean - app.data.molecularity.time(tId).sd];
+        xConf = [xConf (tId - 1) * app.param.analysis.timeSlice];
+    end
+end
+sdInt = fill(xConf,yConf,'red');
+sdInt.FaceColor = [1 0.8 0.8];      
+sdInt.EdgeColor = 'none';
 hold on;
-
-% recording kernel density estimator in text file
-fprintf(fileHandle,'%s\n','Kernel Density Estimator');
-fprintf(fileHandle,'%s\t%s\n','Intensity (Photons)','Frequency');
-for indexId = 1 : length(app.data.curve.x_calib)
-    fprintf(fileHandle,'%f\t%f\n',...
-        app.data.curve.x_calib(indexId),...
-        app.data.curve.y_calib(indexId));
-end
-fprintf(fileHandle,'\n');
-
-% drawing gaussian mixture
-for gaussId = 1 : numGaussCalib
-    y = [];
-    for x = app.data.curve.x_calib
-       y = [y (app.data.curve.param(gaussId) .* exp(-((x - (app.data.curve.param(numGaussCalib + 1) * gaussId)) .^ 2) ./ (2 .* ((app.data.curve.param(numGaussCalib + 1 + gaussId) * sqrt(gaussId)) ^ 2))))]; 
-    end
-    plot(app.data.curve.x_calib,y);
-    hold on;
-    fprintf(fileHandle,'%s\t%d\n','Gaussian Curve',gaussId);
-    fprintf(fileHandle,'%s\t%s\n','Intensity (Photons)','Frequency');
-    for indexId = 1 : length(app.data.curve.x_calib)
-        fprintf(fileHandle,'%f\t%f\n',...
-            app.data.curve.x_calib(indexId),...
-            y(indexId));
-    end
-    fprintf(fileHandle,'\n');
-end
+plot(x,y,'r-');
 hold off;
-xlabel('Intensity (photons)');
-ylabel('Frequency')
+xlabel('Time (min)');
+ylabel('Average molecularity');
 
 % saving figure
 saveas(figHandle,fullfile(app.param.paths.calibrationAndUnknownData,...
     'analysis',...
-    'Calibration_PDF.png'));
+    'Unknown_molecularity_average.png'));
 
-% closing file
-fclose(fileHandle);
+% looping through time
+for tId = 1 : length(app.data.molecularity.count.time)
+    try
+
+        % calculating file handle and opening file
+        fileHandle = fopen(fullfile(app.param.paths.calibrationAndUnknownData,...
+            'analysis',...
+            ['Unknown_molecularity_' num2str(app.param.analysis.timeSlice * (tId - 1)) 'min.txt']),'w');
+
+        % writing proportions
+        fprintf(fileHandle,'%s\n','Molecularity');
+        for unitId = 1 : length(app.data.molecularity.time(tId).index)
+            fprintf(fileHandle,'%d\t%d\n',unitId,app.data.molecularity.time(tId).index(unitId));
+        end
+
+        % closing file
+        fclose(fileHandle);
+
+        % calculating file handle and opening file
+        fileHandle = fopen(fullfile(app.param.paths.calibrationAndUnknownData,...
+            'analysis',...
+            ['Unknown_molecularity_count_' num2str(app.param.analysis.timeSlice * (tId - 1)) 'min.txt']),'w');
+
+        % writing proportions
+        fprintf(fileHandle,'%s\n','Molecularity');
+        for molecularityId = 1 : length(app.data.molecularity.count.time(tId).molecule)
+            fprintf(fileHandle,'%d\t%d\n',molecularityId,app.data.molecularity.count.time(tId).molecule(molecularityId));
+        end
+
+        % closing file
+        fclose(fileHandle);
+
+        % saving PDF of unknown data in text file
+        % calculating file handle and opening file
+        fileHandle = fopen(fullfile(app.param.paths.calibrationAndUnknownData,...
+            'analysis',...
+            ['Unknown_molecularity_PDF_' num2str(app.param.analysis.timeSlice * (tId - 1)) 'min.txt']),'w');
+
+        % creating figure (PDF of molecularity)
+        figHandle = figure('visible','off');
+
+        % drawing kernel density estimator
+        plot(app.data.curve.time(tId).x_unknown,app.data.curve.time(tId).y_unknown);
+
+        % recording kernel density estimator in text file
+        fprintf(fileHandle,'%s\n','Kernel Density Estimator');
+        fprintf(fileHandle,'%s\t%s\n','Molecularity','Frequency');
+        xCurve = app.data.curve.time(tId).x_unknown;
+        yCurve = app.data.curve.time(tId).y_unknown;
+        for indexId = 1 : length(app.data.curve.time(tId).x_unknown)
+            fprintf(fileHandle,'%f\t%f\n',...
+                xCurve(indexId),...
+                yCurve(indexId));
+        end
+        xlabel('Molecularity');
+        ylabel('Frequency')
+
+        % saving figure
+        saveas(figHandle,fullfile(app.param.paths.calibrationAndUnknownData,...
+            'analysis',...
+            ['Unknown_molecularity_PDF_' num2str(app.param.analysis.timeSlice * (tId - 1)) 'min.png']));
+
+        % closing file
+        fclose(fileHandle);
+    catch
+    end
+end
 
 % saving coordinates and intensities of calibration and unknown data in text file
 % calculating file handle and opening file
 fileHandle = fopen(fullfile(app.param.paths.calibrationAndUnknownData,...
     'analysis',...
-    'Calibration_raw.txt'),'w'); 
-fprintf(fileHandle,'%s\t%s\t%s\n','Intensity','x','y');
+    'Calibration_raw.txt'),'w');
+fprintf(fileHandle,'%s\t%s\t%s\t%s\n','Intensity','x','y','t');
 numFiles = length(app.data.file);
 for fileId = 1 : numFiles
-    
+
     % checking if file is a calibration file
     if strcmp(app.data.file(fileId).type,'Calibration')
-        
-        % extracting number of particles
-        numParticles = length(app.data.file(fileId).particle);
-        
-        % looping over particles
-        for particleId = 1 : numParticles
-            
-            % checking if particle is accepted
-            if strcmp(app.data.file(fileId).particle(particleId).state,'accepted')
-                
-                if app.data.file(fileId).particle(particleId).monomeric
-                    
-                    % printing to file
-                    fprintf(fileHandle,'%f\t%f\t%f\n',...
-                        app.data.file(fileId).particle(particleId).maxIntensity - ...
-                        app.data.file(fileId).particle(particleId).minIntensity,...
-                        app.data.file(fileId).particle(particleId).centroid.x,...
-                        app.data.file(fileId).particle(particleId).centroid.y);
+
+        % looping through time
+        for tId = 1 : length(app.data.file(fileId).time)
+
+            try
+
+                % extracting number of particles
+                numParticles = length(app.data.file(fileId).time(tId).particle);
+
+                % looping over particles
+                for particleId = 1 : numParticles
+
+                    % checking if particle is accepted
+                    if strcmp(app.data.file(fileId).time(tId).particle(particleId).state,'accepted')
+
+                        if app.data.file(fileId).time(tId).particle(particleId).monomeric
+
+                            % printing to file
+                            fprintf(fileHandle,'%f\t%f\t%f\n',...
+                                app.data.file(fileId).time(tId).particle(particleId).intensity,...
+                                app.data.file(fileId).time(tId).particle(particleId).centroid.x,...
+                                app.data.file(fileId).time(tId).particle(particleId).centroid.y);
+                        end
+                    end
                 end
+            catch
             end
         end
     end
@@ -391,29 +372,36 @@ fclose(fileHandle);
 
 fileHandle = fopen(fullfile(app.param.paths.calibrationAndUnknownData,...
     'analysis',...
-    'Unknown_raw.txt'),'w'); 
-fprintf(fileHandle,'%s\t%s\t%s\n','Intensity','x','y');
+    'Unknown_raw.txt'),'w');
+fprintf(fileHandle,'%s\t%s\t%s\t%s\n','Intensity','x','y','t');
 numFiles = length(app.data.file);
 for fileId = 1 : numFiles
-    
-    % checking if file is a calibration file
+
+    % checking if file is an unknown file
     if strcmp(app.data.file(fileId).type,'Unknown')
-        
-        % extracting number of particles
-        numParticles = length(app.data.file(fileId).particle);
-        
-        % looping over particles
-        for particleId = 1 : numParticles
-            
-            % checking if particle is accepted
-            if strcmp(app.data.file(fileId).particle(particleId).state,'accepted')
-                 
-                    % printing to file
-                    fprintf(fileHandle,'%f\t%f\t%f\n',...
-                        app.data.file(fileId).particle(particleId).maxIntensity - ...
-                        app.data.file(fileId).particle(particleId).minIntensity,...
-                        app.data.file(fileId).particle(particleId).centroid.x,...
-                        app.data.file(fileId).particle(particleId).centroid.y);
+
+        % looping through time
+        for tId = 1 : length(app.data.file(fileId).time)
+
+            try
+
+                % extracting number of particles
+                numParticles = length(app.data.file(fileId).time(tId).particle);
+
+                % looping over particles
+                for particleId = 1 : numParticles
+
+                    % checking if particle is accepted
+                    if strcmp(app.data.file(fileId).time(tId).particle(particleId).state,'accepted')
+
+                        % printing to file
+                        fprintf(fileHandle,'%f\t%f\t%f\n',...
+                            app.data.file(fileId).time(tId).particle(particleId).intensity,...
+                            app.data.file(fileId).time(tId).particle(particleId).centroid.x,...
+                            app.data.file(fileId).time(tId).particle(particleId).centroid.y);
+                    end
+                end
+            catch
             end
         end
     end
@@ -425,26 +413,4 @@ fclose(fileHandle);
 % saving all data
 data = app.data;
 save(fullfile(app.param.paths.calibrationAndUnknownData,'All data.mat'),'data');
-end
-
-%%====================ModelGenerator=====================%%
-function y = ModelGenerator(p,x)
-global x0 s refineId numGaussCurrent
-y = zeros(size(x));
-for xId = 1 : length(x)
-    for gaussId = 1 : numGaussCurrent
-        y(xId) = y(xId) + (p(gaussId) ./ (s(refineId,gaussId) .* sqrt(2 * pi))) .* exp(-((x(xId) - x0(refineId,gaussId)) .^ 2) ./ (2 .* (s(refineId,gaussId) ^ 2)));
-    end
-end
-end
-
-%%====================FunctionGenerator=====================%%
-function y = GMM(param,x)
-global numGaussCalib
-y = zeros(size(x));
-for xId = 1 : length(x)
-    for gaussId = 1 : numGaussCalib
-        y(xId) = y(xId) + (param(gaussId) .* exp(-((x(xId) - (param(numGaussCalib + 1) * gaussId)) .^ 2) ./ (2 .* ((param(numGaussCalib + 1 + gaussId) * sqrt(gaussId)) ^ 2))));
-    end
-end
 end
